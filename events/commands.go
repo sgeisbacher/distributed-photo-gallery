@@ -1,5 +1,8 @@
 package events
 
+// NoOp command
+type NoOp struct{}
+
 // ImportMedia command
 type ImportMedia struct {
 	Path string

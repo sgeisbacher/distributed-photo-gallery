@@ -1,10 +1,13 @@
 package store
 
 import (
+	"encoding/json"
 	"fmt"
+	"net/http"
 
 	"github.com/ThreeDotsLabs/watermill/components/cqrs"
 	"github.com/sgeisbacher/distributed-photo-gallery/events"
+	"github.com/sirupsen/logrus"
 )
 
 // todo var preStage map[string]Media
@@ -12,13 +15,7 @@ var db map[string]Media
 
 func init() {
 	db = make(map[string]Media)
-}
-
-func Print() {
-	fmt.Println("db:")
-	for _, media := range db {
-		fmt.Printf("\t%#v\n", media)
-	}
+	http.HandleFunc("/media", HandleGetAllMedias)
 }
 
 // CreateMediaOnMediaImportedHandler event handler
@@ -35,9 +32,9 @@ func (h CreateMediaOnMediaImportedHandler) NewEvent() interface{} {
 func (h CreateMediaOnMediaImportedHandler) Handle(e interface{}) error {
 	// todo race
 	event := e.(*events.MediaImported)
-	fmt.Printf("creating media %q in db\n", event.ID)
+	logrus.Debugf("creating media %q in db", event.ID)
 	if _, ok := db[event.ID]; ok {
-		fmt.Println("WARN: already exists, overriding ...")
+		logrus.Warn("already exists, overriding ...")
 	}
 	db[event.ID] = Media{
 		ID:       event.ID,
@@ -47,4 +44,15 @@ func (h CreateMediaOnMediaImportedHandler) Handle(e interface{}) error {
 		Status:   created,
 	}
 	return nil
+}
+
+func HandleGetAllMedias(resp http.ResponseWriter, req *http.Request) {
+	resp.Header().Add("Content-Type", "application/json")
+	jsondata, err := json.Marshal(db)
+	if err != nil {
+		resp.WriteHeader(http.StatusInternalServerError)
+		logrus.Errorf("could not marshall json for all medias: %v", err)
+		return
+	}
+	fmt.Fprintln(resp, string(jsondata))
 }

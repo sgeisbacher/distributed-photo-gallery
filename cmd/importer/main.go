@@ -3,55 +3,44 @@ package main
 import (
 	"flag"
 	"fmt"
-	"log"
-	"net/http"
 	"time"
 
 	"github.com/ThreeDotsLabs/watermill/components/cqrs"
 	"github.com/sgeisbacher/distributed-photo-gallery/helper"
 	"github.com/sgeisbacher/distributed-photo-gallery/importer"
-	"github.com/sgeisbacher/distributed-photo-gallery/stats"
-	"github.com/sgeisbacher/distributed-photo-gallery/store"
 )
 
 var path string
 
-const rootDir = "/tmp/photos"
-
 func init() {
-	flag.StringVar(&path, "p", "", "path to scan for photos")
+	flag.StringVar(&path, "p", "/tmp/photos", "path to scan for photos")
 }
 
 func main() {
+	flag.Parse()
+
 	cmdHandlerFactory := func(cb *cqrs.CommandBus, eb *cqrs.EventBus) []cqrs.CommandHandler {
 		return []cqrs.CommandHandler{
 			importer.ImportMediaHandler{eb},
 		}
 	}
 	eventHandlerFactory := func(cb *cqrs.CommandBus, eb *cqrs.EventBus) []cqrs.EventHandler {
-		return []cqrs.EventHandler{
-			store.CreateMediaOnMediaImportedHandler{cb},
-			stats.TrackStatsOnMediaImportedHandler{cb},
-		}
+		return []cqrs.EventHandler{}
 	}
 	cqrsCtx := helper.CreateCqrsContext(cmdHandlerFactory, eventHandlerFactory)
 
 	// starting importer
 	go func(commandBus *cqrs.CommandBus) {
 		time.Sleep(15 * time.Second)
-		err := importer.Run(rootDir, commandBus)
+		err := importer.Run(path, commandBus)
 		if err != nil {
-			fmt.Printf("error while importing %q: %v\n", rootDir, err)
+			fmt.Printf("error while importing %q: %v\n", path, err)
 		}
 	}(cqrsCtx.Facade.CommandBus())
 
-	importer.Watch(cqrsCtx.Facade.CommandBus(), rootDir, false)
+	importer.Watch(cqrsCtx.Facade.CommandBus(), path, false)
 
-	go func(cqrsCtx helper.CqrsContext) {
-		if err := cqrsCtx.Run(); err != nil {
-			log.Fatal(err)
-		}
-	}(cqrsCtx)
-
-	log.Fatal(http.ListenAndServe("127.0.0.1:8787", nil))
+	if err := cqrsCtx.Run(); err != nil {
+		panic(err)
+	}
 }

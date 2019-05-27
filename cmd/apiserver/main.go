@@ -5,17 +5,20 @@ import (
 	"net/http"
 
 	"github.com/ThreeDotsLabs/watermill/components/cqrs"
+	"github.com/sgeisbacher/distributed-photo-gallery/events"
 	"github.com/sgeisbacher/distributed-photo-gallery/helper"
-	"github.com/sgeisbacher/distributed-photo-gallery/stats"
+	"github.com/sgeisbacher/distributed-photo-gallery/store"
 )
 
 func main() {
 	cmdHandlerFactory := func(cb *cqrs.CommandBus, eb *cqrs.EventBus) []cqrs.CommandHandler {
-		return []cqrs.CommandHandler{}
+		return []cqrs.CommandHandler{
+			events.NoOpCommandHandler{eb},
+		}
 	}
 	eventHandlerFactory := func(cb *cqrs.CommandBus, eb *cqrs.EventBus) []cqrs.EventHandler {
 		return []cqrs.EventHandler{
-			stats.TrackStatsOnMediaImportedHandler{cb},
+			store.CreateMediaOnMediaImportedHandler{cb},
 		}
 	}
 	cqrsF := helper.CreateCqrsContext(cmdHandlerFactory, eventHandlerFactory)
@@ -26,5 +29,5 @@ func main() {
 		}
 	}(cqrsF)
 
-	log.Fatal(http.ListenAndServe("127.0.0.1:8787", nil))
+	log.Fatal(http.ListenAndServe("127.0.0.1:8788", nil))
 }
