@@ -14,15 +14,17 @@ import (
 	"github.com/sgeisbacher/distributed-photo-gallery/store"
 )
 
-var path string
-
-const rootDir = "/tmp/photos"
+var rootDir string
 
 func init() {
-	flag.StringVar(&path, "p", "", "path to scan for photos")
+	flag.StringVar(&rootDir, "p", "/tmp/photos", "path to scan for photos")
 }
 
 func main() {
+	flag.Parse()
+
+	// logrus.SetLevel(logrus.DebugLevel)
+
 	cmdHandlerFactory := func(cb *cqrs.CommandBus, eb *cqrs.EventBus) []cqrs.CommandHandler {
 		return []cqrs.CommandHandler{
 			importer.ImportMediaHandler{eb},

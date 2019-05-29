@@ -1,6 +1,7 @@
 package importer
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"path"
@@ -37,7 +38,7 @@ func isValid(path string, info os.FileInfo) (bool, string) {
 }
 
 // Handle handles ImportMedia command
-func (h ImportMediaHandler) Handle(c interface{}) error {
+func (h ImportMediaHandler) Handle(ctx context.Context, c interface{}) error {
 	cmd, ok := c.(*events.ImportMedia)
 	if !ok {
 		return fmt.Errorf("could not typeassert")
@@ -57,7 +58,7 @@ func (h ImportMediaHandler) Handle(c interface{}) error {
 	name := path.Base(cmd.Path)
 	fileType := path.Ext(cmd.Path)
 	logger.Debugf("file: %s, fileType: %s", cmd.Path, fileType)
-	h.EventBus.Publish(events.MediaImported{
+	h.EventBus.Publish(context.Background(), events.MediaImported{
 		ID:   id,
 		Name: name,
 		Path: cmd.Path,
@@ -65,4 +66,8 @@ func (h ImportMediaHandler) Handle(c interface{}) error {
 		Size: info.Size(),
 	})
 	return nil
+}
+
+func (h ImportMediaHandler) HandlerName() string {
+	return "ImportMediaHandler"
 }

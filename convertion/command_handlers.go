@@ -1,6 +1,7 @@
 package convertion
 
 import (
+	"context"
 	"fmt"
 	"time"
 
@@ -30,7 +31,7 @@ func (h GenerateThumbShotHandler) Handle(c interface{}) error {
 	fmt.Println("generating thumb-shot ...")
 	time.Sleep(2 * time.Second)
 	fmt.Println("thumb-shot done")
-	h.eventBus.Publish(events.MediaThumbShotGenerated{})
+	h.eventBus.Publish(context.Background(), events.MediaThumbShotGenerated{})
 	return nil
 }
 
@@ -56,6 +57,6 @@ func (h GenerateBigShotHandler) Handle(c interface{}) error {
 	fmt.Println("generating big-shot ...")
 	time.Sleep(2 * time.Second)
 	fmt.Println("big-shot done")
-	h.eventBus.Publish(events.MediaBigShotGenerated{})
+	h.eventBus.Publish(context.Background(), events.MediaBigShotGenerated{})
 	return nil
 }

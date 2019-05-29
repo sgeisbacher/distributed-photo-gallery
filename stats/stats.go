@@ -1,6 +1,7 @@
 package stats
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -30,7 +31,7 @@ func (h TrackStatsOnMediaImportedHandler) NewEvent() interface{} {
 }
 
 // Handle handle event
-func (h TrackStatsOnMediaImportedHandler) Handle(e interface{}) error {
+func (h TrackStatsOnMediaImportedHandler) Handle(ctx context.Context, e interface{}) error {
 	event := e.(*events.MediaImported)
 	logrus.Debug("tracking stats for media:", event.Path)
 
@@ -40,6 +41,10 @@ func (h TrackStatsOnMediaImportedHandler) Handle(e interface{}) error {
 	totalSize += event.Size
 
 	return nil
+}
+
+func (h TrackStatsOnMediaImportedHandler) HandlerName() string {
+	return "TrackStatsOnMediaImportedHandler"
 }
 
 func HandleGetStats(resp http.ResponseWriter, req *http.Request) {

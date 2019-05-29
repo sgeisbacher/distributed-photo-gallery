@@ -1,6 +1,7 @@
 package importer
 
 import (
+	"context"
 	"log"
 
 	"github.com/ThreeDotsLabs/watermill/components/cqrs"
@@ -23,7 +24,7 @@ func Watch(cb *cqrs.CommandBus, rootDir string, recursive bool) error {
 				}
 				if event.Op&fsnotify.Create == fsnotify.Create {
 					log.Println("new file:", event.Name)
-					commandBus.Send(events.ImportMedia{Path: event.Name})
+					commandBus.Send(context.Background(), events.ImportMedia{Path: event.Name})
 				}
 			case err, ok := <-watcher.Errors:
 				if !ok {

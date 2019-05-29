@@ -1,6 +1,7 @@
 package store
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -29,7 +30,7 @@ func (h CreateMediaOnMediaImportedHandler) NewEvent() interface{} {
 }
 
 // Handle handle event
-func (h CreateMediaOnMediaImportedHandler) Handle(e interface{}) error {
+func (h CreateMediaOnMediaImportedHandler) Handle(ctx context.Context, e interface{}) error {
 	// todo race
 	event := e.(*events.MediaImported)
 	logrus.Debugf("creating media %q in db", event.ID)
@@ -44,6 +45,10 @@ func (h CreateMediaOnMediaImportedHandler) Handle(e interface{}) error {
 		Status:   created,
 	}
 	return nil
+}
+
+func (h CreateMediaOnMediaImportedHandler) HandlerName() string {
+	return "CreateMediaOnMediaImportedHandler"
 }
 
 func HandleGetAllMedias(resp http.ResponseWriter, req *http.Request) {

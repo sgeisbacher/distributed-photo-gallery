@@ -1,8 +1,10 @@
 package importer
 
 import (
+	"context"
 	"os"
 	"path/filepath"
+	"time"
 
 	"github.com/ThreeDotsLabs/watermill/components/cqrs"
 	"github.com/sgeisbacher/distributed-photo-gallery/events"
@@ -21,7 +23,8 @@ func Run(rootDir string, cb *cqrs.CommandBus) error {
 			return nil
 		}
 		logrus.Debug("found", path)
-		cb.Send(events.ImportMedia{Path: path})
+		cb.Send(context.Background(), events.ImportMedia{Path: path})
+		time.Sleep(3 * time.Second)
 		return nil
 	})
 }
