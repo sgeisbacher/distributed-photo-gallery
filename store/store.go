@@ -11,17 +11,22 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-// todo var preStage map[string]Media
-var db map[string]Media
-
-func init() {
-	db = make(map[string]Media)
-	http.HandleFunc("/media", HandleGetAllMedias)
-}
+type operation func(map[string]Media)
 
 // CreateMediaOnMediaImportedHandler event handler
 type CreateMediaOnMediaImportedHandler struct {
 	CommandBus *cqrs.CommandBus
+	ops        chan operation
+}
+
+func NewCreateMediaOnMediaImportedHandler(cb *cqrs.CommandBus) CreateMediaOnMediaImportedHandler {
+	handler := CreateMediaOnMediaImportedHandler{
+		CommandBus: cb,
+		ops:        make(chan operation),
+	}
+	http.HandleFunc("/media", handler.HandleGetAllMedias)
+	go handler.run()
+	return handler
 }
 
 // NewEvent creates new event
@@ -31,18 +36,19 @@ func (h CreateMediaOnMediaImportedHandler) NewEvent() interface{} {
 
 // Handle handle event
 func (h CreateMediaOnMediaImportedHandler) Handle(ctx context.Context, e interface{}) error {
-	// todo race
 	event := e.(*events.MediaImported)
 	logrus.Debugf("creating media %q in db", event.ID)
-	if _, ok := db[event.ID]; ok {
-		logrus.Warn("already exists, overriding ...")
-	}
-	db[event.ID] = Media{
-		ID:       event.ID,
-		Name:     event.Name,
-		OrigPath: event.Path,
-		Type:     event.Type,
-		Status:   created,
+	h.ops <- func(db map[string]Media) {
+		if _, ok := db[event.ID]; ok {
+			logrus.Warn("already exists, overriding ...")
+		}
+		db[event.ID] = Media{
+			ID:       event.ID,
+			Name:     event.Name,
+			OrigPath: event.Path,
+			Type:     event.Type,
+			Status:   created,
+		}
 	}
 	return nil
 }
@@ -51,13 +57,29 @@ func (h CreateMediaOnMediaImportedHandler) HandlerName() string {
 	return "CreateMediaOnMediaImportedHandler"
 }
 
-func HandleGetAllMedias(resp http.ResponseWriter, req *http.Request) {
+func (h CreateMediaOnMediaImportedHandler) HandleGetAllMedias(resp http.ResponseWriter, req *http.Request) {
+	result := make(chan []Media)
+	h.ops <- func(db map[string]Media) {
+		var medias []Media
+		for _, media := range db {
+			medias = append(medias, media)
+		}
+		result <- medias
+	}
+	medias := <-result
 	resp.Header().Add("Content-Type", "application/json")
-	jsondata, err := json.Marshal(db)
+	jsondata, err := json.Marshal(medias)
 	if err != nil {
 		resp.WriteHeader(http.StatusInternalServerError)
 		logrus.Errorf("could not marshall json for all medias: %v", err)
 		return
 	}
 	fmt.Fprintln(resp, string(jsondata))
+}
+
+func (h CreateMediaOnMediaImportedHandler) run() {
+	db := make(map[string]Media)
+	for op := range h.ops {
+		op(db)
+	}
 }
