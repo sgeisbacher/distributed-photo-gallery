@@ -33,7 +33,7 @@ func main() {
 	eventHandlerFactory := func(cb *cqrs.CommandBus, eb *cqrs.EventBus) []cqrs.EventHandler {
 		return []cqrs.EventHandler{
 			store.NewCreateMediaOnMediaImportedHandler(cb),
-			stats.TrackStatsOnMediaImportedHandler{cb},
+			stats.NewTrackStatsOnMediaImportedHandler(cb),
 		}
 	}
 	cqrsCtx := helper.CreateCqrsContext(cmdHandlerFactory, eventHandlerFactory)

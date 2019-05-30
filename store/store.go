@@ -2,12 +2,11 @@ package store
 
 import (
 	"context"
-	"encoding/json"
-	"fmt"
 	"net/http"
 
 	"github.com/ThreeDotsLabs/watermill/components/cqrs"
 	"github.com/sgeisbacher/distributed-photo-gallery/events"
+	"github.com/sgeisbacher/distributed-photo-gallery/helper"
 	"github.com/sirupsen/logrus"
 )
 
@@ -64,14 +63,10 @@ func (h CreateMediaOnMediaImportedHandler) HandleGetAllMedias(resp http.Response
 		result <- medias
 	}
 	medias := <-result
-	resp.Header().Add("Content-Type", "application/json")
-	jsondata, err := json.Marshal(medias)
+	err := helper.RespondJSON(resp, medias, nil)
 	if err != nil {
-		resp.WriteHeader(http.StatusInternalServerError)
-		logrus.Errorf("could not marshall json for all medias: %v", err)
-		return
+		logrus.Errorf("error while responding GetAllMedias: %v", err)
 	}
-	fmt.Fprintln(resp, string(jsondata))
 }
 
 func (h CreateMediaOnMediaImportedHandler) run() {

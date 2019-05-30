@@ -15,7 +15,7 @@ func main() {
 	}
 	eventHandlerFactory := func(cb *cqrs.CommandBus, eb *cqrs.EventBus) []cqrs.EventHandler {
 		return []cqrs.EventHandler{
-			stats.TrackStatsOnMediaImportedHandler{cb},
+			stats.NewTrackStatsOnMediaImportedHandler(cb),
 		}
 	}
 	cqrsF := helper.CreateCqrsContext(cmdHandlerFactory, eventHandlerFactory)
