@@ -2,7 +2,6 @@ package store
 
 import "fmt"
 
-// MediaStatus enum
 type MediaStatus int
 
 const (
@@ -12,7 +11,6 @@ const (
 	approved MediaStatus = iota
 )
 
-// Media aggregate
 type Media struct {
 	ID        string
 	Name      string
@@ -23,7 +21,6 @@ type Media struct {
 	Status    MediaStatus
 }
 
-// String Stringer func
 func (media *Media) String() string {
 	format := `
 	Media: %s

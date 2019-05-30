@@ -13,12 +13,10 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-// ImportMediaHandler command handler
 type ImportMediaHandler struct {
 	EventBus *cqrs.EventBus
 }
 
-// NewCommand creates new ImportMedia command
 func (h ImportMediaHandler) NewCommand() interface{} {
 	return &events.ImportMedia{}
 }
@@ -37,7 +35,6 @@ func isValid(path string, info os.FileInfo) (bool, string) {
 	return true, ""
 }
 
-// Handle handles ImportMedia command
 func (h ImportMediaHandler) Handle(ctx context.Context, c interface{}) error {
 	cmd, ok := c.(*events.ImportMedia)
 	if !ok {

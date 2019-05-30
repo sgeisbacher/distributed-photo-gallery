@@ -13,7 +13,6 @@ import (
 
 type operation func(map[string]Media)
 
-// CreateMediaOnMediaImportedHandler event handler
 type CreateMediaOnMediaImportedHandler struct {
 	CommandBus *cqrs.CommandBus
 	ops        chan operation
@@ -29,12 +28,10 @@ func NewCreateMediaOnMediaImportedHandler(cb *cqrs.CommandBus) CreateMediaOnMedi
 	return handler
 }
 
-// NewEvent creates new event
 func (h CreateMediaOnMediaImportedHandler) NewEvent() interface{} {
 	return &events.MediaImported{}
 }
 
-// Handle handle event
 func (h CreateMediaOnMediaImportedHandler) Handle(ctx context.Context, e interface{}) error {
 	event := e.(*events.MediaImported)
 	logrus.Debugf("creating media %q in db", event.ID)
