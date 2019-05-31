@@ -12,18 +12,26 @@ import (
 	"github.com/sgeisbacher/distributed-photo-gallery/importer"
 	"github.com/sgeisbacher/distributed-photo-gallery/stats"
 	"github.com/sgeisbacher/distributed-photo-gallery/store"
+	"github.com/sirupsen/logrus"
 )
 
 var rootDir string
+var verbose bool
 
 func init() {
 	flag.StringVar(&rootDir, "p", "/tmp/photos", "path to scan for photos")
+	flag.BoolVar(&verbose, "v", false, "verbose")
 }
 
 func main() {
 	flag.Parse()
 
-	// logrus.SetLevel(logrus.DebugLevel)
+	if verbose {
+		logrus.SetLevel(logrus.DebugLevel)
+	}
+
+	// setup stores
+	statsStore := stats.NewStatsStore()
 
 	cmdHandlerFactory := func(cb *cqrs.CommandBus, eb *cqrs.EventBus) []cqrs.CommandHandler {
 		return []cqrs.CommandHandler{
@@ -33,7 +41,7 @@ func main() {
 	eventHandlerFactory := func(cb *cqrs.CommandBus, eb *cqrs.EventBus) []cqrs.EventHandler {
 		return []cqrs.EventHandler{
 			store.NewCreateMediaOnMediaImportedHandler(cb),
-			stats.NewTrackStatsOnMediaImportedHandler(cb),
+			stats.TrackStatsOnMediaImportedHandler{cb, statsStore},
 		}
 	}
 	cqrsCtx := helper.CreateCqrsContext(cmdHandlerFactory, eventHandlerFactory)

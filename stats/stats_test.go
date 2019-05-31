@@ -11,7 +11,9 @@ import (
 func TestHandleMediaImported(t *testing.T) {
 	RegisterTestingT(t)
 
-	handler := NewTrackStatsOnMediaImportedHandler(nil)
+	store := NewStatsStore()
+
+	handler := TrackStatsOnMediaImportedHandler{nil, store}
 	handler.Handle(context.Background(), &events.MediaImported{
 		ID:   "1",
 		Path: "/tmp/photos/1.jpg",
@@ -20,7 +22,7 @@ func TestHandleMediaImported(t *testing.T) {
 		Type: "jpg",
 	})
 
-	currStats := handler.GetCurrentStats()
+	currStats := store.GetCurrentStats()
 	Expect(currStats.Counter).To(Equal(int64(1)))
 	Expect(currStats.TotalSize).To(Equal(int64(550)))
 	Expect(currStats.AvgSize).To(Equal(int64(550)))
@@ -41,7 +43,7 @@ func TestHandleMediaImported(t *testing.T) {
 		Type: "png",
 	})
 
-	currStats = handler.GetCurrentStats()
+	currStats = store.GetCurrentStats()
 	Expect(currStats.Counter).To(Equal(int64(3)))
 	Expect(currStats.TotalSize).To(Equal(int64(1400)))
 	Expect(currStats.AvgSize).To(Equal(int64(466)))

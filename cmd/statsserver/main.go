@@ -10,12 +10,14 @@ import (
 )
 
 func main() {
+	statsStore := stats.NewStatsStore()
+
 	cmdHandlerFactory := func(cb *cqrs.CommandBus, eb *cqrs.EventBus) []cqrs.CommandHandler {
 		return []cqrs.CommandHandler{}
 	}
 	eventHandlerFactory := func(cb *cqrs.CommandBus, eb *cqrs.EventBus) []cqrs.EventHandler {
 		return []cqrs.EventHandler{
-			stats.NewTrackStatsOnMediaImportedHandler(cb),
+			stats.TrackStatsOnMediaImportedHandler{cb, statsStore},
 		}
 	}
 	cqrsF := helper.CreateCqrsContext(cmdHandlerFactory, eventHandlerFactory)
